@@ -1,16 +1,45 @@
-from flask import Flask, render_template, request, jsonify, redirect, url_for
+from flask import Flask, render_template, request, jsonify, redirect, url_for, session
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 import os
+from functools import wraps
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'votre_clé_secrète_ici'
 
-# Utiliser le dossier permanent sur Render
+# Configuration de la base de données
 if os.environ.get('RENDER'):
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:////data/seo_tracker.db'
 else:
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///seo_tracker.db'
+
+# Identifiants d'authentification
+USERNAME = "admin"
+PASSWORD = "VBWEBcorp2024!"
+
+# Fonction pour vérifier si l'utilisateur est connecté
+def login_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if 'logged_in' not in session:
+            return redirect(url_for('login'))
+        return f(*args, **kwargs)
+    return decorated_function
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    error = None
+    if request.method == 'POST':
+        if request.form['username'] == USERNAME and request.form['password'] == PASSWORD:
+            session['logged_in'] = True
+            return redirect(url_for('index'))
+        error = 'Identifiants invalides. Veuillez réessayer.'
+    return render_template('login.html', error=error)
+
+@app.route('/logout')
+def logout():
+    session.pop('logged_in', None)
+    return redirect(url_for('login'))
 
 db = SQLAlchemy(app)
 
@@ -54,12 +83,14 @@ Cordialement,""")
             db.session.commit()
 
 @app.route('/')
+@login_required
 def index():
     clients = Client.query.all()
     template = Template.query.first()
     return render_template('index.html', clients=clients, template=template)
 
 @app.route('/add_client', methods=['POST'])
+@login_required
 def add_client():
     name = request.form.get('name')
     email = request.form.get('email')
@@ -72,12 +103,14 @@ def add_client():
     return redirect(url_for('index'))
 
 @app.route('/client/<int:client_id>')
+@login_required
 def client_reports(client_id):
     client = Client.query.get_or_404(client_id)
     reports = Report.query.filter_by(client_id=client_id).order_by(Report.month.desc()).all()
     return render_template('client_reports.html', client=client, reports=reports)
 
 @app.route('/save_report', methods=['POST'])
+@login_required
 def save_report():
     data = request.get_json()
     
@@ -102,6 +135,7 @@ def save_report():
     return jsonify({'success': True})
 
 @app.route('/save_template', methods=['POST'])
+@login_required
 def save_template():
     data = request.get_json()
     template = Template.query.first()
@@ -115,6 +149,7 @@ def save_template():
     return jsonify({'success': True})
 
 @app.route('/delete_client/<int:client_id>', methods=['POST'])
+@login_required
 def delete_client(client_id):
     client = Client.query.get_or_404(client_id)
     # Supprimer d'abord tous les rapports associés
@@ -124,6 +159,7 @@ def delete_client(client_id):
     return jsonify({'success': True})
 
 @app.route('/delete_report/<int:report_id>', methods=['POST'])
+@login_required
 def delete_report(report_id):
     report = Report.query.get_or_404(report_id)
     db.session.delete(report)
