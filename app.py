@@ -9,8 +9,11 @@ app.config['SECRET_KEY'] = 'votre_clé_secrète_ici'
 
 # Configuration de la base de données
 if os.environ.get('RENDER'):
-    # Sur Render, utiliser l'URL de la base PostgreSQL fournie automatiquement
-    app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL')
+    # Sur Render, l'URL commence par postgres://, mais SQLAlchemy a besoin de postgresql://
+    database_url = os.environ.get('DATABASE_URL')
+    if database_url and database_url.startswith('postgres://'):
+        database_url = database_url.replace('postgres://', 'postgresql://', 1)
+    app.config['SQLALCHEMY_DATABASE_URI'] = database_url
 else:
     # En local, utiliser SQLite
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///seo_tracker.db'
