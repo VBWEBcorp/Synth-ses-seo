@@ -9,9 +9,10 @@ app.config['SECRET_KEY'] = 'votre_clé_secrète_ici'
 
 # Configuration de la base de données
 if os.environ.get('RENDER'):
-    # On Render, database file is pre-created by startup script
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:////data/seo_tracker.db'
+    # Sur Render, utiliser l'URL de la base PostgreSQL fournie automatiquement
+    app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL')
 else:
+    # En local, utiliser SQLite
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///seo_tracker.db'
 
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
