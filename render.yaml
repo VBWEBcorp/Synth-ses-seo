@@ -4,8 +4,8 @@ services:
     env: python
     buildCommand: pip install -r requirements.txt
     startCommand: |
-      mkdir -p /data
-      chmod 777 /data
+      mkdir -p /data && \
+      chmod 777 /data && \
       gunicorn app:app
     envVars:
       - key: PYTHON_VERSION
