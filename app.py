@@ -9,7 +9,7 @@ app.config['SECRET_KEY'] = 'votre_clé_secrète_ici'
 
 # Configuration de la base de données
 if os.environ.get('RENDER'):
-    # On Render, the /data directory is mounted by render.yaml
+    # On Render, database file is pre-created by startup script
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:////data/seo_tracker.db'
 else:
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///seo_tracker.db'
@@ -178,7 +178,8 @@ else:
             db.create_all()
             
             # Initialize default template if necessary
-            if not Template.query.first():
+            template = Template.query.first()
+            if not template:
                 default_template = Template(content="""Bonjour,
 
 Voici la synthèse des actions SEO réalisées ce mois-ci pour votre site :
@@ -189,7 +190,12 @@ Ces actions permettront d'améliorer votre visibilité sur les moteurs de recher
 
 Cordialement,""")
                 db.session.add(default_template)
-                db.session.commit()
+                try:
+                    db.session.commit()
+                except Exception as e:
+                    db.session.rollback()
+                    print(f"Error initializing default template: {str(e)}")
+                    raise
     except Exception as e:
         print(f"Error initializing database: {str(e)}")
         raise

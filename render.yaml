@@ -3,7 +3,11 @@ services:
     name: seo-tracker
     env: python
     buildCommand: pip install -r requirements.txt
-    startCommand: gunicorn app:app
+    startCommand: |
+      mkdir -p /data &&
+      touch /data/seo_tracker.db &&
+      chmod 777 /data/seo_tracker.db &&
+      gunicorn app:app
     envVars:
       - key: PYTHON_VERSION
         value: 3.11.0
