@@ -9,8 +9,7 @@ app.config['SECRET_KEY'] = 'votre_clé_secrète_ici'
 
 # Configuration de la base de données
 if os.environ.get('RENDER'):
-    # Ensure the /data directory exists and is writable
-    os.makedirs('/data', exist_ok=True)
+    # On Render, the /data directory is mounted by render.yaml
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:////data/seo_tracker.db'
 else:
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///seo_tracker.db'
