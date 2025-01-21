@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rapports SEO - {{ client.name }}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="{{ url_for('index') }}">SEO Tracker</a>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <div class="row mb-4">
+            <div class="col">
+                <h2>{{ client.name }}</h2>
+                <p class="text-muted mb-0">{{ client.email }}</p>
+            </div>
+            <div class="col-auto">
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#editReportModal" 
+                        data-report-id="" data-month="" data-actions="" data-secretary="">
+                    Nouveau rapport
+                </button>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Mois</th>
+                                        <th>Rapport Victor</th>
+                                        <th>Rapport envoyé</th>
+                                        <th>Dernière modification</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for report in reports %}
+                                    <tr>
+                                        <td>{{ report.month.strftime('%B %Y') }}</td>
+                                        <td>{{ report.actions_seo[:100] if report.actions_seo else '' }}...</td>
+                                        <td>{{ report.secretary_report[:100] if report.secretary_report else 'Non envoyé' }}</td>
+                                        <td>{{ report.updated_at.strftime('%d/%m/%Y %H:%M') }}</td>
+                                        <td>
+                                            <button class="btn btn-sm btn-primary edit-report" 
+                                                    data-bs-toggle="modal"
+                                                    data-bs-target="#editReportModal"
+                                                    data-report-id="{{ report.id }}"
+                                                    data-month="{{ report.month.strftime('%Y-%m') }}"
+                                                    data-actions="{{ report.actions_seo|tojson|safe }}"
+                                                    data-secretary="{{ report.secretary_report|tojson|safe }}">
+                                                Éditer
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Nouveau/Édition Rapport -->
+    <div class="modal fade" id="editReportModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Éditer le rapport</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="editReportForm">
+                        <input type="hidden" id="reportId" name="reportId">
+                        <div class="mb-3">
+                            <label for="month" class="form-label">MOIS</label>
+                            <input type="month" class="form-control" id="month" name="month" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="actions_seo" class="form-label">RAPPORT DE VICTOR</label>
+                            <textarea class="form-control" id="actions_seo" name="actions_seo" rows="8" required></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label for="secretary_report" class="form-label">
+                                RAPPORT ENVOYÉ AU CLIENT
+                                <small class="text-secondary">(à remplir par l'assistant SEO)</small>
+                            </label>
+                            <textarea class="form-control" id="secretary_report" name="secretary_report" 
+                                    rows="8" placeholder="Copier ici le rapport qui a été envoyé au client..."></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
+                    <button type="button" class="btn btn-primary" id="saveReport">Enregistrer</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Gestionnaire pour l'édition d'un rapport
+        document.querySelectorAll('.edit-report').forEach(button => {
+            button.addEventListener('click', function() {
+                const reportId = this.dataset.reportId;
+                const month = this.dataset.month;
+                const actions = JSON.parse(this.dataset.actions || '""');
+                const secretary = JSON.parse(this.dataset.secretary || '""');
+
+                document.querySelector('[name="reportId"]').value = reportId;
+                document.querySelector('#month').value = month;
+                document.querySelector('#actions_seo').value = actions;
+                document.querySelector('#secretary_report').value = secretary;
+            });
+        });
+
+        // Gestionnaire pour la sauvegarde
+        document.getElementById('saveReport').addEventListener('click', function() {
+            const formData = {
+                client_id: "{{ client.id }}",
+                report_id: document.querySelector('[name="reportId"]').value,
+                month: document.getElementById('month').value,
+                actions_seo: document.getElementById('actions_seo').value,
+                secretary_report: document.getElementById('secretary_report').value
+            };
+
+            fetch('/save_report', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(formData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                }
+            });
+        });
+    </script>
+</body>
+</html>
