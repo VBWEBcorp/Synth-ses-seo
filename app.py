@@ -126,5 +126,20 @@ def save_template():
     return jsonify({'success': True})
 
 if __name__ == '__main__':
-    init_db()  # Initialiser la base de données au démarrage
     app.run(debug=True)
+else:
+    with app.app_context():
+        db.create_all()  # Create tables on startup when running with gunicorn
+        # Initialize template if it doesn't exist
+        if not Template.query.first():
+            default_template = Template(content="""Bonjour,
+
+Voici la synthèse des actions SEO réalisées ce mois-ci pour votre site :
+
+[Actions réalisées]
+
+Ces actions permettront d'améliorer votre visibilité sur les moteurs de recherche.
+
+Cordialement,""")
+            db.session.add(default_template)
+            db.session.commit()
