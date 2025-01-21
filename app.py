@@ -35,13 +35,13 @@ class Template(db.Model):
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
 def init_db():
-    # Supprimer et recréer toutes les tables
     with app.app_context():
-        db.drop_all()
+        # Créer les tables si elles n'existent pas, sans supprimer les données existantes
         db.create_all()
         
-        # Ajouter le template par défaut
-        default_template = Template(content="""Bonjour,
+        # Ajouter le template par défaut seulement s'il n'existe pas déjà
+        if not Template.query.first():
+            default_template = Template(content="""Bonjour,
 
 Voici la synthèse des actions SEO réalisées ce mois-ci pour votre site :
 
@@ -50,25 +50,8 @@ Voici la synthèse des actions SEO réalisées ce mois-ci pour votre site :
 Ces actions permettront d'améliorer votre visibilité sur les moteurs de recherche.
 
 Cordialement,""")
-        db.session.add(default_template)
-        
-        # Ajouter les clients initiaux
-        clients = [
-            Client(name='Méréo', email='guiard.pierre@gmail.com'),
-            Client(name='Happy Kite Surf', email='benoitplanchon@gmail.com'),
-            Client(name='Actimaine', email='contact@acti-maine.fr'),
-            Client(name='DP Rénov', email='desbarrephillippe@gmail.com'),
-            Client(name='Las Siette', email='safak.evin@las-siette.fr'),
-            Client(name='Rennes Pneus', email='contact@rennespneus.fr'),
-            Client(name='Vents et courbes', email='ventsetcourbes@gmail.com'),
-            Client(name='COMIZI', email='ababel@comizi.fr'),
-            Client(name='ECO Habitat', email='ecohabitat44.contact@gmail.com')
-        ]
-        
-        for client in clients:
-            db.session.add(client)
-        
-        db.session.commit()
+            db.session.add(default_template)
+            db.session.commit()
 
 @app.route('/')
 def index():
@@ -151,7 +134,9 @@ if __name__ == '__main__':
     app.run(debug=True)
 else:
     with app.app_context():
+        # En production, on crée juste les tables si elles n'existent pas
         db.create_all()
+        # Initialiser le template par défaut si nécessaire
         if not Template.query.first():
             default_template = Template(content="""Bonjour,
 
