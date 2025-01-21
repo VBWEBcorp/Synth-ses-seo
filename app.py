@@ -125,12 +125,27 @@ def save_template():
     db.session.commit()
     return jsonify({'success': True})
 
+@app.route('/delete_client/<int:client_id>', methods=['POST'])
+def delete_client(client_id):
+    client = Client.query.get_or_404(client_id)
+    # Supprimer d'abord tous les rapports associés
+    Report.query.filter_by(client_id=client_id).delete()
+    db.session.delete(client)
+    db.session.commit()
+    return jsonify({'success': True})
+
+@app.route('/delete_report/<int:report_id>', methods=['POST'])
+def delete_report(report_id):
+    report = Report.query.get_or_404(report_id)
+    db.session.delete(report)
+    db.session.commit()
+    return jsonify({'success': True})
+
 if __name__ == '__main__':
     app.run(debug=True)
 else:
     with app.app_context():
-        db.create_all()  # Create tables on startup when running with gunicorn
-        # Initialize template if it doesn't exist
+        db.create_all()
         if not Template.query.first():
             default_template = Template(content="""Bonjour,
 
