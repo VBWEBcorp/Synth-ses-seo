@@ -5,7 +5,13 @@ import os
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'votre_clé_secrète_ici'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///seo_tracker.db'
+
+# Utiliser le dossier permanent sur Render
+if os.environ.get('RENDER'):
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:////data/seo_tracker.db'
+else:
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///seo_tracker.db'
+
 db = SQLAlchemy(app)
 
 class Client(db.Model):
