@@ -3,9 +3,24 @@ from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 import os
 from functools import wraps
+import logging
+from logging.handlers import RotatingFileHandler
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'votre_clé_secrète_ici'
+app.secret_key = os.environ.get('SECRET_KEY', 'default-key-for-dev')
+
+# Configuration du logging
+if not app.debug:
+    if not os.path.exists('logs'):
+        os.mkdir('logs')
+    file_handler = RotatingFileHandler('logs/seo-tracker.log', maxBytes=10240, backupCount=10)
+    file_handler.setFormatter(logging.Formatter(
+        '%(asctime)s %(levelname)s: %(message)s [in %(pathname)s:%(lineno)d]'
+    ))
+    file_handler.setLevel(logging.INFO)
+    app.logger.addHandler(file_handler)
+    app.logger.setLevel(logging.INFO)
+    app.logger.info('SEO Tracker startup')
 
 # Configuration de la base de données
 if os.environ.get('RENDER'):
@@ -122,22 +137,40 @@ def index():
 @app.route('/add_client', methods=['POST'])
 @login_required
 def add_client():
-    name = request.form.get('name')
-    email = request.form.get('email')
-    
-    if name and email:
+    try:
+        name = request.form.get('name')
+        email = request.form.get('email')
+        
+        if not name or not email:
+            app.logger.warning('Tentative d\'ajout de client avec des données manquantes')
+            return jsonify({'error': 'Le nom et l\'email sont requis'}), 400
+        
+        existing_client = Client.query.filter_by(email=email).first()
+        if existing_client:
+            app.logger.warning(f'Tentative d\'ajout d\'un client avec un email déjà existant: {email}')
+            return jsonify({'error': 'Un client avec cet email existe déjà'}), 400
+        
         client = Client(name=name, email=email)
         db.session.add(client)
         db.session.commit()
-    
-    return redirect(url_for('index'))
+        app.logger.info(f'Nouveau client ajouté avec succès: {name} ({email})')
+        return redirect(url_for('index'))
+        
+    except Exception as e:
+        db.session.rollback()
+        app.logger.error(f'Erreur lors de l\'ajout d\'un client: {str(e)}')
+        return jsonify({'error': 'Une erreur est survenue lors de l\'ajout du client'}), 500
 
 @app.route('/client/<int:client_id>')
 @login_required
 def client_reports(client_id):
-    client = Client.query.get_or_404(client_id)
-    reports = Report.query.filter_by(client_id=client_id).order_by(Report.month.desc()).all()
-    return render_template('client_reports.html', client=client, reports=reports)
+    try:
+        client = Client.query.get_or_404(client_id)
+        reports = Report.query.filter_by(client_id=client_id).order_by(Report.month.desc()).all()
+        return render_template('client_reports.html', client=client, reports=reports)
+    except Exception as e:
+        app.logger.error(f'Erreur lors de l\'accès aux rapports du client {client_id}: {str(e)}')
+        return jsonify({'error': 'Une erreur est survenue lors de l\'accès aux rapports'}), 500
 
 @app.route('/save_report', methods=['POST'])
 @login_required
@@ -146,28 +179,31 @@ def save_report():
         data = request.get_json()
         
         if not data:
+            app.logger.warning('Tentative de sauvegarde de rapport sans données')
             return jsonify({'success': False, 'error': 'Données manquantes'}), 400
             
         if not data.get('month') or not data.get('actions_seo'):
+            app.logger.warning('Tentative de sauvegarde de rapport avec des champs requis manquants')
             return jsonify({'success': False, 'error': 'Le mois et le rapport sont requis'}), 400
 
         if not data.get('client_id'):
+            app.logger.warning('Tentative de sauvegarde de rapport sans ID client')
             return jsonify({'success': False, 'error': 'ID client manquant'}), 400
 
         try:
             month_date = datetime.strptime(data['month'], '%Y-%m').date()
-        except ValueError:
+        except ValueError as e:
+            app.logger.warning(f'Format de date invalide: {data.get("month")}')
             return jsonify({'success': False, 'error': 'Format de date invalide'}), 400
         
         if data.get('report_id'):
-            # Mise à jour d'un rapport existant
             report = Report.query.get_or_404(data['report_id'])
             report.month = month_date
             report.actions_seo = data['actions_seo']
             if 'secretary_report' in data:
                 report.secretary_report = data['secretary_report']
+            app.logger.info(f'Rapport {report.id} mis à jour pour le client {report.client_id}')
         else:
-            # Création d'un nouveau rapport
             report = Report(
                 client_id=data['client_id'],
                 month=month_date,
@@ -175,46 +211,70 @@ def save_report():
                 secretary_report=data.get('secretary_report', '')
             )
             db.session.add(report)
+            app.logger.info(f'Nouveau rapport créé pour le client {data["client_id"]}')
         
         db.session.commit()
         return jsonify({'success': True})
         
     except Exception as e:
         db.session.rollback()
-        print(f"Error saving report: {str(e)}")
+        app.logger.error(f'Erreur lors de la sauvegarde du rapport: {str(e)}')
         return jsonify({'success': False, 'error': 'Une erreur est survenue lors de la sauvegarde'}), 500
 
 @app.route('/save_template', methods=['POST'])
 @login_required
 def save_template():
-    data = request.get_json()
-    template = Template.query.first()
-    if template:
-        template.content = data['content']
-    else:
-        template = Template(content=data['content'])
-        db.session.add(template)
-    
-    db.session.commit()
-    return jsonify({'success': True})
+    try:
+        data = request.get_json()
+        if not data or 'content' not in data:
+            app.logger.warning('Tentative de sauvegarde de template sans contenu')
+            return jsonify({'error': 'Le contenu du template est requis'}), 400
+            
+        template = Template.query.first()
+        if not template:
+            template = Template(content=data['content'])
+            db.session.add(template)
+        else:
+            template.content = data['content']
+            
+        db.session.commit()
+        app.logger.info('Template mis à jour avec succès')
+        return jsonify({'success': True})
+        
+    except Exception as e:
+        db.session.rollback()
+        app.logger.error(f'Erreur lors de la sauvegarde du template: {str(e)}')
+        return jsonify({'error': 'Une erreur est survenue lors de la sauvegarde du template'}), 500
 
 @app.route('/delete_client/<int:client_id>', methods=['POST'])
 @login_required
 def delete_client(client_id):
-    client = Client.query.get_or_404(client_id)
-    # Supprimer d'abord tous les rapports associés
-    Report.query.filter_by(client_id=client_id).delete()
-    db.session.delete(client)
-    db.session.commit()
-    return jsonify({'success': True})
+    try:
+        client = Client.query.get_or_404(client_id)
+        # Supprimer d'abord tous les rapports associés
+        Report.query.filter_by(client_id=client_id).delete()
+        db.session.delete(client)
+        db.session.commit()
+        app.logger.info(f'Client {client_id} supprimé avec succès')
+        return jsonify({'success': True})
+    except Exception as e:
+        db.session.rollback()
+        app.logger.error(f'Erreur lors de la suppression du client {client_id}: {str(e)}')
+        return jsonify({'error': 'Une erreur est survenue lors de la suppression du client'}), 500
 
 @app.route('/delete_report/<int:report_id>', methods=['POST'])
 @login_required
 def delete_report(report_id):
-    report = Report.query.get_or_404(report_id)
-    db.session.delete(report)
-    db.session.commit()
-    return jsonify({'success': True})
+    try:
+        report = Report.query.get_or_404(report_id)
+        db.session.delete(report)
+        db.session.commit()
+        app.logger.info(f'Rapport {report_id} supprimé avec succès')
+        return jsonify({'success': True})
+    except Exception as e:
+        db.session.rollback()
+        app.logger.error(f'Erreur lors de la suppression du rapport {report_id}: {str(e)}')
+        return jsonify({'error': 'Une erreur est survenue lors de la suppression du rapport'}), 500
 
 if __name__ == '__main__':
     app.run(debug=True)
