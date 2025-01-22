@@ -215,6 +215,13 @@ body {
     margin-right: 0.5rem;
 }
 
+/* Style pour le bouton de déconnexion */
+.btn-outline-light:hover {
+    background-color: #343a40 !important;
+    border-color: #f8f9fa !important;
+    color: #f8f9fa !important;
+}
+
 /* Links */
 a {
     text-decoration: none;
