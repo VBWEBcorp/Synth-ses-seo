@@ -92,19 +92,15 @@ Cordialement,""")
         # Ajouter les clients initiaux seulement s'il n'y a pas encore de clients
         if not Client.query.first():
             initial_clients = [
-                Client(name="Espace Coiffure Fabienne", email="espacecoiffurefabienne@gmail.com"),
-                Client(name="Optique Saint Martin", email="contact@optiquesaintmartin.fr"),
-                Client(name="Boulangerie Maison Martin", email="maisonmartin.boulangerie@gmail.com"),
-                Client(name="Garage Renault Mantes", email="garage.renault.mantes@gmail.com"),
-                Client(name="Pharmacie du Centre", email="pharmacieducentre78@gmail.com"),
-                Client(name="Cabinet Dentaire Conflans", email="cabinetdentaireconflans@gmail.com"),
-                Client(name="Le Bistrot du Port", email="lebistrotduport@gmail.com"),
-                Client(name="Au Jardin de Laura", email="aujardindelaura@gmail.com"),
-                Client(name="Immobilier Prestige", email="contact@immoprestige78.fr"),
-                Client(name="Institut Beauté Marine", email="institut.beaute.marine@gmail.com"),
-                Client(name="Agence Web", email="contact@vbwebcorp.fr"),
-                Client(name="Plombier Mantes", email="plombier.mantes@gmail.com"),
-                Client(name="Electricien Conflans", email="electricien.conflans@gmail.com")
+                Client(name="Méréo", email="guiard.pierre@gmail.com"),
+                Client(name="Happy Kite Surf", email="benoitplanchon@gmail.com"),
+                Client(name="Actimaine", email="contact@acti-maine.fr"),
+                Client(name="DP Rénov", email="desbarrephillippe@gmail.com"),
+                Client(name="Las Siette", email="safak.evin@las-siette.fr"),
+                Client(name="Rennes Pneus", email="contact@rennespneus.fr"),
+                Client(name="Vents et courbes", email="ventsetcourbes@gmail.com"),
+                Client(name="COMIZI", email="ababel@comizi.fr"),
+                Client(name="ECO Habitat", email="ecohabitat44.contact@gmail.com")
             ]
             
             for client in initial_clients:
