@@ -70,3 +70,4 @@ WHERE template.type = ?
 [parameters: ('pdf', 1, 0)]
 (Background on this error at: https://sqlalche.me/e/20/e3q8)
  [in C:\Users\vicbe\CascadeProjects\seo-tracker\app.py:72]
+2025-01-22 18:26:05,000 INFO: SEO Tracker startup [in C:\Users\vicbe\CascadeProjects\seo-tracker\app.py:26]
