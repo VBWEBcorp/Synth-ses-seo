@@ -1,0 +1,5 @@
+2025-01-22 03:00:17,273 INFO: SEO Tracker startup [in C:\Users\vicbe\CascadeProjects\seo-tracker\app.py:23]
+2025-01-22 03:06:08,983 INFO: SEO Tracker startup [in C:\Users\vicbe\CascadeProjects\seo-tracker\app.py:23]
+2025-01-22 03:08:56,190 INFO: SEO Tracker startup [in C:\Users\vicbe\CascadeProjects\seo-tracker\app.py:23]
+2025-01-22 03:13:59,052 ERROR: Erreur lors de l'accès aux rapports du client 1: No filter named 'nl2br'. [in C:\Users\vicbe\CascadeProjects\seo-tracker\app.py:172]
+2025-01-22 03:14:02,806 ERROR: Erreur lors de l'accès aux rapports du client 3: No filter named 'nl2br'. [in C:\Users\vicbe\CascadeProjects\seo-tracker\app.py:172]

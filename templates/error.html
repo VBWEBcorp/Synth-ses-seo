@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-danger text-white">
+                    <h4 class="mb-0">Une erreur est survenue</h4>
+                </div>
+                <div class="card-body">
+                    <p class="lead">Désolé, une erreur inattendue s'est produite. Nous avons été notifiés et allons corriger le problème.</p>
+                    
+                    <div class="alert alert-info">
+                        <p>Que pouvez-vous faire ?</p>
+                        <ul>
+                            <li>Rafraîchir la page et réessayer</li>
+                            <li>Revenir à la <a href="{{ url_for('index') }}">page d'accueil</a></li>
+                            <li>Si le problème persiste, contactez le support technique</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="text-center mt-4">
+                        <a href="{{ url_for('index') }}" class="btn btn-primary">Retour à l'accueil</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
