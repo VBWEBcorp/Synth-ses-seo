@@ -3,10 +3,7 @@ services:
     name: seo-tracker
     env: python
     buildCommand: pip install -r requirements.txt
-    startCommand: |
-      mkdir -p /data
-      chmod 777 /data
-      gunicorn app:app
+    startCommand: gunicorn app:app
     envVars:
       - key: PYTHON_VERSION
         value: 3.11.0
@@ -14,7 +11,13 @@ services:
         value: production
       - key: RENDER
         value: "true"
-    disk:
-      name: data
-      mountPath: /data
-      sizeGB: 1
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DATABASE_URL
+        fromDatabase:
+          name: seo_tracker_db
+          property: connectionString
+    databases:
+      - name: seo_tracker_db
+        plan: free
+        ipAllowList: []
