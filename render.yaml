@@ -1,10 +1,12 @@
 services:
   - type: web
-    name: synth-seo-seo
+    name: seo-tracker
     env: python
     buildCommand: pip install -r requirements.txt
     startCommand: |
-      mkdir -p /data && chmod 777 /data && gunicorn app:app
+      mkdir -p /data
+      chmod 777 /data
+      gunicorn app:app
     envVars:
       - key: PYTHON_VERSION
         value: 3.11.0
@@ -12,11 +14,7 @@ services:
         value: production
       - key: RENDER
         value: "true"
-      - key: DATABASE_URL
-        fromDatabase:
-          name: seo_tracker_db
-          property: connectionString
-    databases:
-      - name: seo_tracker_db
-        plan: free
-        ipAllowList: []
+    disk:
+      name: data
+      mountPath: /data
+      sizeGB: 1
