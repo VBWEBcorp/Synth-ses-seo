@@ -1,9 +1,10 @@
 services:
   - type: web
-    name: seo-tracker
+    name: synth-seo-seo
     env: python
     buildCommand: pip install -r requirements.txt
-    startCommand: gunicorn app:app
+    startCommand: |
+      mkdir -p /data && chmod 777 /data && gunicorn app:app
     envVars:
       - key: PYTHON_VERSION
         value: 3.11.0
