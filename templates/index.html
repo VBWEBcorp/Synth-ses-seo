@@ -117,14 +117,19 @@
                                 <i class="fas fa-file-signature"></i>
                                 Template de synthèse mensuelle
                             </h5>
-                            <button class="btn btn-primary" id="saveTemplate">
+                            <button class="btn btn-primary" id="saveTemplateEmail">
+                                <i class="fas fa-save"></i>
+                                <span class="d-none d-sm-inline ms-1">Enregistrer</span>
+                            </button>
+                            <button class="btn btn-primary" id="saveTemplatePdf">
                                 <i class="fas fa-save"></i>
                                 <span class="d-none d-sm-inline ms-1">Enregistrer</span>
                             </button>
                         </div>
                     </div>
                     <div class="card-body">
-                        <textarea class="form-control" id="templateContent" rows="4">{{ template.content if template else '' }}</textarea>
+                        <textarea class="form-control" id="emailTemplate" rows="4">{{ template.email_content if template else '' }}</textarea>
+                        <textarea class="form-control" id="pdfTemplate" rows="4">{{ template.pdf_content if template else '' }}</textarea>
                     </div>
                 </div>
             </div>
@@ -133,52 +138,55 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        function deleteClient(clientId, clientName) {
-            if (confirm(`Êtes-vous sûr de vouloir supprimer le client "${clientName}" ? Cette action supprimera également tous ses rapports.`)) {
-                fetch(`/delete_client/${clientId}`, {
+        async function saveTemplate(type) {
+            const templateId = type === 'email' ? 'emailTemplate' : 'pdfTemplate';
+            const content = document.getElementById(templateId).value;
+            
+            try {
+                const response = await fetch('/save_template', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        window.location.reload();
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert('Une erreur est survenue lors de la suppression du client.');
+                    body: JSON.stringify({
+                        type: type,
+                        content: content
+                    })
                 });
+                
+                const data = await response.json();
+                if (data.success) {
+                    showAlert('success', 'Template enregistré avec succès');
+                } else {
+                    showAlert('danger', data.error || 'Erreur lors de l\'enregistrement');
+                }
+            } catch (error) {
+                showAlert('danger', 'Erreur lors de la connexion au serveur');
             }
         }
 
-        document.getElementById('saveTemplate').addEventListener('click', function() {
-            const content = document.getElementById('templateContent').value;
-            const button = this;
-            const originalContent = button.innerHTML;
+        function showAlert(type, message) {
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+            alertDiv.innerHTML = `
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            `;
             
-            button.disabled = true;
-            button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enregistrement...';
+            const container = document.querySelector('.container');
+            container.insertBefore(alertDiv, container.firstChild);
             
-            fetch('/save_template', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ content: content })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    button.innerHTML = '<i class="fas fa-check"></i> Enregistré !';
-                    setTimeout(() => {
-                        button.innerHTML = originalContent;
-                        button.disabled = false;
-                    }, 1500);
-                }
-            });
+            setTimeout(() => {
+                alertDiv.remove();
+            }, 3000);
+        }
+
+        document.getElementById('saveTemplateEmail').addEventListener('click', function() {
+            saveTemplate('email');
+        });
+
+        document.getElementById('saveTemplatePdf').addEventListener('click', function() {
+            saveTemplate('pdf');
         });
     </script>
 </body>

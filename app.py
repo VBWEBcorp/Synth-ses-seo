@@ -124,17 +124,19 @@ class Report(db.Model):
 
 class Template(db.Model):
     id = db.Column(db.Integer, primary_key=True)
+    type = db.Column(db.String(10), nullable=False)  # 'email' ou 'pdf'
     content = db.Column(db.Text)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
 def init_db():
     with app.app_context():
-        # Créer les tables si elles n'existent pas, sans supprimer les données existantes
         db.create_all()
         
-        # Ajouter le template par défaut seulement s'il n'existe pas déjà
-        if not Template.query.first():
-            default_template = Template(content="""Bonjour,
+        # Ajouter les templates par défaut s'ils n'existent pas
+        if not Template.query.filter_by(type='pdf').first():
+            pdf_template = Template(
+                type='pdf',
+                content="""Bonjour,
 
 Voici la synthèse des actions SEO réalisées ce mois-ci pour votre site :
 
@@ -142,39 +144,34 @@ Voici la synthèse des actions SEO réalisées ce mois-ci pour votre site :
 
 Ces actions permettront d'améliorer votre visibilité sur les moteurs de recherche.
 
-Cordialement,""")
-            db.session.add(default_template)
-            db.session.commit()
+Cordialement,"""
+            )
+            db.session.add(pdf_template)
 
-        # Ajouter les clients initiaux seulement s'il n'y a pas encore de clients
-        if not Client.query.first():
-            initial_clients = [
-                Client(name="Méréo", email="guiard.pierre@gmail.com"),
-                Client(name="Happy Kite Surf", email="benoitplanchon@gmail.com"),
-                Client(name="Actimaine", email="contact@acti-maine.fr"),
-                Client(name="DP Rénov", email="desbarrephillippe@gmail.com"),
-                Client(name="Las Siette", email="safak.evin@las-siette.fr"),
-                Client(name="Rennes Pneus", email="contact@rennespneus.fr"),
-                Client(name="Vents et courbes", email="ventsetcourbes@gmail.com"),
-                Client(name="COMIZI", email="ababel@comizi.fr"),
-                Client(name="ECO Habitat", email="ecohabitat44.contact@gmail.com")
-            ]
-            
-            for client in initial_clients:
-                db.session.add(client)
-            
-            try:
-                db.session.commit()
-            except Exception as e:
-                db.session.rollback()
-                print(f"Error adding initial clients: {str(e)}")
+        if not Template.query.filter_by(type='email').first():
+            email_template = Template(
+                type='email',
+                content="""Bonjour,
+
+Je vous prie de trouver ci-joint la synthèse des actions SEO réalisées ce mois-ci pour votre site.
+
+Cordialement,"""
+            )
+            db.session.add(email_template)
+
+        try:
+            db.session.commit()
+        except Exception as e:
+            db.session.rollback()
+            app.logger.error(f"Error adding initial templates: {str(e)}")
 
 @app.route('/')
 @login_required
 def index():
     clients = Client.query.all()
-    template = Template.query.first()
-    return render_template('index.html', clients=clients, template=template)
+    pdf_template = Template.query.filter_by(type='pdf').first()
+    email_template = Template.query.filter_by(type='email').first()
+    return render_template('index.html', clients=clients, template=pdf_template, email_template=email_template)
 
 @app.route('/add_client', methods=['POST'])
 @login_required
@@ -268,19 +265,19 @@ def save_report():
 def save_template():
     try:
         data = request.get_json()
-        if not data or 'content' not in data:
-            app.logger.warning('Tentative de sauvegarde de template sans contenu')
-            return jsonify({'error': 'Le contenu du template est requis'}), 400
+        if not data or 'content' not in data or 'type' not in data:
+            app.logger.warning('Tentative de sauvegarde de template sans contenu ou type')
+            return jsonify({'error': 'Le contenu et le type du template sont requis'}), 400
             
-        template = Template.query.first()
+        template = Template.query.filter_by(type=data['type']).first()
         if not template:
-            template = Template(content=data['content'])
+            template = Template(type=data['type'], content=data['content'])
             db.session.add(template)
         else:
             template.content = data['content']
             
         db.session.commit()
-        app.logger.info('Template mis à jour avec succès')
+        app.logger.info(f'Template {data["type"]} mis à jour avec succès')
         return jsonify({'success': True})
         
     except Exception as e:
@@ -326,10 +323,12 @@ else:
             # Create database tables if they don't exist
             db.create_all()
             
-            # Initialize default template if necessary
-            template = Template.query.first()
+            # Initialize default templates if necessary
+            template = Template.query.filter_by(type='pdf').first()
             if not template:
-                default_template = Template(content="""Bonjour,
+                default_template = Template(
+                    type='pdf',
+                    content="""Bonjour,
 
 Voici la synthèse des actions SEO réalisées ce mois-ci pour votre site :
 
@@ -337,7 +336,26 @@ Voici la synthèse des actions SEO réalisées ce mois-ci pour votre site :
 
 Ces actions permettront d'améliorer votre visibilité sur les moteurs de recherche.
 
-Cordialement,""")
+Cordialement,"""
+                )
+                db.session.add(default_template)
+                try:
+                    db.session.commit()
+                except Exception as e:
+                    db.session.rollback()
+                    print(f"Error initializing default template: {str(e)}")
+                    raise
+
+            template = Template.query.filter_by(type='email').first()
+            if not template:
+                default_template = Template(
+                    type='email',
+                    content="""Bonjour,
+
+Je vous prie de trouver ci-joint la synthèse des actions SEO réalisées ce mois-ci pour votre site.
+
+Cordialement,"""
+                )
                 db.session.add(default_template)
                 try:
                     db.session.commit()
