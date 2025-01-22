@@ -30,11 +30,7 @@ def get_db():
     max_retries = 3
     for attempt in range(max_retries):
         try:
-            if os.environ.get('RENDER'):
-                db_url = os.environ.get('DATABASE_URL').replace('postgres://', 'postgresql://')
-            else:
-                db_url = 'sqlite:///seo_tracker.db'
-            
+            db_url = 'sqlite:////data/seo_tracker.db'
             app.config['SQLALCHEMY_DATABASE_URI'] = db_url
             app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
             app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
