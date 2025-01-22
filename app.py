@@ -92,16 +92,19 @@ Cordialement,""")
         # Ajouter les clients initiaux seulement s'il n'y a pas encore de clients
         if not Client.query.first():
             initial_clients = [
-                Client(name="Espace Coiffure", email="espacecoiffure@example.com"),
-                Client(name="Optique Saint Martin", email="optiquestmartin@example.com"),
-                Client(name="Boulangerie Maison Martin", email="maisonmartin@example.com"),
-                Client(name="Garage Renault", email="garage.renault@example.com"),
-                Client(name="Pharmacie du Centre", email="pharmaciecentre@example.com"),
-                Client(name="Cabinet Dentaire", email="cabinetdentaire@example.com"),
-                Client(name="Restaurant Le Bistrot", email="lebistrot@example.com"),
-                Client(name="Fleuriste Au Jardin", email="aujardin@example.com"),
-                Client(name="Immobilier Prestige", email="immoprestige@example.com"),
-                Client(name="Institut de Beauté", email="institut.beaute@example.com")
+                Client(name="Espace Coiffure Fabienne", email="espacecoiffurefabienne@gmail.com"),
+                Client(name="Optique Saint Martin", email="contact@optiquesaintmartin.fr"),
+                Client(name="Boulangerie Maison Martin", email="maisonmartin.boulangerie@gmail.com"),
+                Client(name="Garage Renault Mantes", email="garage.renault.mantes@gmail.com"),
+                Client(name="Pharmacie du Centre", email="pharmacieducentre78@gmail.com"),
+                Client(name="Cabinet Dentaire Conflans", email="cabinetdentaireconflans@gmail.com"),
+                Client(name="Le Bistrot du Port", email="lebistrotduport@gmail.com"),
+                Client(name="Au Jardin de Laura", email="aujardindelaura@gmail.com"),
+                Client(name="Immobilier Prestige", email="contact@immoprestige78.fr"),
+                Client(name="Institut Beauté Marine", email="institut.beaute.marine@gmail.com"),
+                Client(name="Agence Web", email="contact@vbwebcorp.fr"),
+                Client(name="Plombier Mantes", email="plombier.mantes@gmail.com"),
+                Client(name="Electricien Conflans", email="electricien.conflans@gmail.com")
             ]
             
             for client in initial_clients:
