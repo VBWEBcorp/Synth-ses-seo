@@ -126,71 +126,67 @@ class Report(db.Model):
 
 class Template(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    type = db.Column(db.String(10), nullable=False)  # 'email' ou 'pdf'
-    content = db.Column(db.Text)
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    type = db.Column(db.String(50), nullable=False)
+    content = db.Column(db.Text, nullable=True)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+class User(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(64), unique=True, nullable=False)
+    password = db.Column(db.String(128), nullable=False)
+
+    def set_password(self, password):
+        self.password = password
 
 def init_db():
     with app.app_context():
-        # Supprimer et recréer toutes les tables
-        db.drop_all()
-        db.create_all()
-        
-        # Ajouter les templates par défaut
-        pdf_template = Template(
-            type='pdf',
-            content="""Bonjour,
-
-Voici la synthèse des actions SEO réalisées ce mois-ci pour votre site :
-
-[Actions réalisées]
-
-Ces actions permettront d'améliorer votre visibilité sur les moteurs de recherche.
-
-Cordialement,"""
-        )
-        db.session.add(pdf_template)
-
-        email_template = Template(
-            type='email',
-            content="""Bonjour,
-
-Je vous prie de trouver ci-joint la synthèse des actions SEO réalisées ce mois-ci pour votre site.
-
-Cordialement,"""
-        )
-        db.session.add(email_template)
-
-        # Ajouter les clients
-        initial_clients = [
-            Client(name="Méréo", email="guiard.pierre@gmail.com"),
-            Client(name="Happy Kite Surf", email="benoitplanchon@gmail.com"),
-            Client(name="Actimaine", email="contact@acti-maine.fr"),
-            Client(name="DP Rénov", email="desbarrephillippe@gmail.com"),
-            Client(name="Las Siette", email="safak.evin@las-siette.fr"),
-            Client(name="Rennes Pneus", email="contact@rennespneus.fr"),
-            Client(name="Vents et courbes", email="ventsetcourbes@gmail.com"),
-            Client(name="COMIZI", email="ababel@comizi.fr"),
-            Client(name="ECO Habitat", email="ecohabitat44.contact@gmail.com")
-        ]
-        
-        for client in initial_clients:
-            db.session.add(client)
-        
         try:
+            db.drop_all()
+            db.create_all()
+            
+            # Créer un utilisateur admin par défaut
+            if not User.query.filter_by(username='admin').first():
+                admin = User(username='admin')
+                admin.set_password('admin')  # À changer en production !
+                db.session.add(admin)
+            
+            # Créer les templates par défaut
+            if not Template.query.filter_by(type='pdf').first():
+                pdf_template = Template(
+                    type='pdf',
+                    content='Rapport SEO pour {{ client.name }}\n\nRésultats :\n{{ results }}'
+                )
+                db.session.add(pdf_template)
+            
+            if not Template.query.filter_by(type='email').first():
+                email_template = Template(
+                    type='email',
+                    content='Bonjour,\n\nVoici votre rapport SEO :\n\n{{ results }}\n\nCordialement'
+                )
+                db.session.add(email_template)
+            
             db.session.commit()
+            app.logger.info('Base de données initialisée avec succès')
+            return True
         except Exception as e:
             db.session.rollback()
-            app.logger.error(f"Error initializing database: {str(e)}")
-            raise
+            app.logger.error(f'Erreur lors de l\'initialisation de la base de données : {str(e)}')
+            return False
 
 @app.route('/')
 @login_required
 def index():
-    clients = Client.query.all()
-    pdf_template = Template.query.filter_by(type='pdf').first()
-    email_template = Template.query.filter_by(type='email').first()
-    return render_template('index.html', clients=clients, template=pdf_template, email_template=email_template)
+    try:
+        pdf_template = Template.query.filter_by(type='pdf').first()
+        email_template = Template.query.filter_by(type='email').first()
+        clients = Client.query.all()
+        return render_template('index.html', 
+                            pdf_template=pdf_template.content if pdf_template else '',
+                            email_template=email_template.content if email_template else '',
+                            clients=clients)
+    except Exception as e:
+        app.logger.error(f"Erreur dans la route index : {str(e)}")
+        return render_template('error.html', error="Une erreur est survenue lors du chargement de la page")
 
 @app.route('/add_client', methods=['POST'])
 @login_required
