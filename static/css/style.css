@@ -330,22 +330,100 @@ small {
     margin-right: 0.5rem;
 }
 
-/* Responsive */
+/* Responsive Design */
 @media (max-width: 768px) {
     .container {
-        padding: 1rem;
+        padding-left: 15px;
+        padding-right: 15px;
     }
-    
-    h1 {
-        font-size: 1.5rem;
-        margin-bottom: 1.5rem;
+
+    /* Table responsive sur mobile */
+    .table-responsive {
+        margin: 0;
+        padding: 0;
     }
-    
+
+    .table td, .table th {
+        padding: 0.75rem;
+        font-size: 0.9rem;
+    }
+
+    /* Ajustements des boutons sur mobile */
+    .btn {
+        padding: 0.5rem 1rem;
+        font-size: 0.9rem;
+    }
+
+    .btn-sm {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.8rem;
+    }
+
+    /* Ajustements des cards sur mobile */
+    .card {
+        margin-bottom: 1rem;
+    }
+
     .card-body {
         padding: 1rem;
     }
-    
-    .table td, .table th {
-        padding: 0.75rem;
+
+    /* Ajustements du formulaire sur mobile */
+    .form-control {
+        padding: 0.5rem 0.75rem;
+        font-size: 0.9rem;
+    }
+
+    /* Ajustements des marges et paddings */
+    .mt-4 {
+        margin-top: 1.5rem !important;
+    }
+
+    .mb-4 {
+        margin-bottom: 1.5rem !important;
+    }
+
+    /* Ajustements des titres */
+    h1, .h1 {
+        font-size: 1.75rem;
+    }
+
+    h2, .h2 {
+        font-size: 1.5rem;
+    }
+}
+
+/* Ajustements pour très petits écrans */
+@media (max-width: 576px) {
+    /* Réorganisation des actions dans la table */
+    .table td:last-child {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .table td:last-child .btn {
+        width: 100%;
+        margin: 0;
+    }
+
+    /* Ajustement du modal sur mobile */
+    .modal-dialog {
+        margin: 0.5rem;
+    }
+
+    .modal-body {
+        padding: 1rem;
+    }
+
+    /* Ajustement de la navbar sur mobile */
+    .navbar-brand {
+        font-size: 1.1rem;
+    }
+
+    /* Réduction des marges sur mobile */
+    .container {
+        padding-left: 10px;
+        padding-right: 10px;
     }
 }

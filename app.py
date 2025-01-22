@@ -89,6 +89,30 @@ Cordialement,""")
             db.session.add(default_template)
             db.session.commit()
 
+        # Ajouter les clients initiaux seulement s'il n'y a pas encore de clients
+        if not Client.query.first():
+            initial_clients = [
+                Client(name="Espace Coiffure", email="espacecoiffure@example.com"),
+                Client(name="Optique Saint Martin", email="optiquestmartin@example.com"),
+                Client(name="Boulangerie Maison Martin", email="maisonmartin@example.com"),
+                Client(name="Garage Renault", email="garage.renault@example.com"),
+                Client(name="Pharmacie du Centre", email="pharmaciecentre@example.com"),
+                Client(name="Cabinet Dentaire", email="cabinetdentaire@example.com"),
+                Client(name="Restaurant Le Bistrot", email="lebistrot@example.com"),
+                Client(name="Fleuriste Au Jardin", email="aujardin@example.com"),
+                Client(name="Immobilier Prestige", email="immoprestige@example.com"),
+                Client(name="Institut de Beauté", email="institut.beaute@example.com")
+            ]
+            
+            for client in initial_clients:
+                db.session.add(client)
+            
+            try:
+                db.session.commit()
+            except Exception as e:
+                db.session.rollback()
+                print(f"Error adding initial clients: {str(e)}")
+
 @app.route('/')
 @login_required
 def index():
@@ -119,27 +143,47 @@ def client_reports(client_id):
 @app.route('/save_report', methods=['POST'])
 @login_required
 def save_report():
-    data = request.get_json()
-    
-    if data.get('report_id'):
-        # Mise à jour d'un rapport existant
-        report = Report.query.get_or_404(data['report_id'])
-        report.month = datetime.strptime(data['month'], '%Y-%m').date()
-        report.actions_seo = data['actions_seo']
-        if 'secretary_report' in data:
-            report.secretary_report = data['secretary_report']
-    else:
-        # Création d'un nouveau rapport
-        report = Report(
-            client_id=data['client_id'],
-            month=datetime.strptime(data['month'], '%Y-%m').date(),
-            actions_seo=data['actions_seo'],
-            secretary_report=data.get('secretary_report', '')
-        )
-        db.session.add(report)
-    
-    db.session.commit()
-    return jsonify({'success': True})
+    try:
+        data = request.get_json()
+        
+        if not data:
+            return jsonify({'success': False, 'error': 'Données manquantes'}), 400
+            
+        if not data.get('month') or not data.get('actions_seo'):
+            return jsonify({'success': False, 'error': 'Le mois et le rapport sont requis'}), 400
+
+        if not data.get('client_id'):
+            return jsonify({'success': False, 'error': 'ID client manquant'}), 400
+
+        try:
+            month_date = datetime.strptime(data['month'], '%Y-%m').date()
+        except ValueError:
+            return jsonify({'success': False, 'error': 'Format de date invalide'}), 400
+        
+        if data.get('report_id'):
+            # Mise à jour d'un rapport existant
+            report = Report.query.get_or_404(data['report_id'])
+            report.month = month_date
+            report.actions_seo = data['actions_seo']
+            if 'secretary_report' in data:
+                report.secretary_report = data['secretary_report']
+        else:
+            # Création d'un nouveau rapport
+            report = Report(
+                client_id=data['client_id'],
+                month=month_date,
+                actions_seo=data['actions_seo'],
+                secretary_report=data.get('secretary_report', '')
+            )
+            db.session.add(report)
+        
+        db.session.commit()
+        return jsonify({'success': True})
+        
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error saving report: {str(e)}")
+        return jsonify({'success': False, 'error': 'Une erreur est survenue lors de la sauvegarde'}), 500
 
 @app.route('/save_template', methods=['POST'])
 @login_required

@@ -10,62 +10,86 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+    <nav class="navbar navbar-expand-lg navbar-dark">
         <div class="container">
-            <a class="navbar-brand" href="{{ url_for('index') }}">SEO Tracker</a>
+            <a class="navbar-brand" href="{{ url_for('index') }}">
+                <i class="fas fa-chart-line me-2"></i>
+                SEO Tracker
+            </a>
+            <a href="{{ url_for('index') }}" class="btn btn-outline-light btn-sm ms-auto">
+                <i class="fas fa-arrow-left me-1"></i>
+                <span class="d-none d-sm-inline">Retour</span>
+            </a>
         </div>
     </nav>
 
     <div class="container mt-4">
-        <div class="row mb-4">
-            <div class="col">
-                <h2>{{ client.name }}</h2>
-                <p class="text-muted mb-0">{{ client.email }}</p>
+        <div class="row mb-4 align-items-center">
+            <div class="col-12 col-sm">
+                <h2 class="mb-2 mb-sm-0">
+                    <i class="fas fa-user me-2"></i>{{ client.name }}
+                </h2>
+                <p class="text-muted mb-0">
+                    <i class="fas fa-envelope me-2"></i>{{ client.email }}
+                </p>
             </div>
-            <div class="col-auto">
-                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#editReportModal" 
+            <div class="col-12 col-sm-auto mt-3 mt-sm-0">
+                <button class="btn btn-primary w-100 w-sm-auto" data-bs-toggle="modal" data-bs-target="#editReportModal" 
                         data-report-id="" data-month="" data-actions="" data-secretary="">
-                    Nouveau rapport
+                    <i class="fas fa-plus me-1"></i>
+                    <span>Nouveau rapport</span>
                 </button>
             </div>
         </div>
 
-        <div class="row">
-            <div class="col-12">
-                <div class="card">
-                    <div class="card-body">
-                        <div class="table-responsive">
-                            <table class="table">
-                                <thead>
-                                    <tr>
-                                        <th>Mois</th>
-                                        <th>Rapport Victor</th>
-                                        <th>Rapport envoyé</th>
-                                        <th>Dernière modification</th>
-                                        <th>Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for report in reports %}
-                                    <tr>
-                                        <td>{{ report.month.strftime('%B %Y') }}</td>
-                                        <td>{{ report.actions_seo[:100] if report.actions_seo else '' }}...</td>
-                                        <td>{{ report.secretary_report[:100] if report.secretary_report else 'Non envoyé' }}</td>
-                                        <td>{{ report.updated_at.strftime('%d/%m/%Y %H:%M') }}</td>
-                                        <td class="text-end">
-                                            <button class="btn btn-primary btn-sm" onclick="editReport({{ report.id }}, '{{ report.month.strftime('%Y-%m') }}', `{{ report.actions_seo|replace('\n', '\\n')|replace('`', '\\`') }}`, `{{ report.secretary_report|default('')|replace('\n', '\\n')|replace('`', '\\`') }}`)">
-                                                <i class="fas fa-edit"></i> Modifier
-                                            </button>
-                                            <button class="btn btn-primary btn-sm" onclick="deleteReport({{ report.id }}, '{{ report.month.strftime('%B %Y') }}')">
-                                                <i class="fas fa-trash"></i>
-                                            </button>
-                                        </td>
-                                    </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
+        <div class="card">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table mb-0">
+                        <thead>
+                            <tr>
+                                <th>Mois</th>
+                                <th>Rapport Victor</th>
+                                <th class="d-none d-md-table-cell">Rapport envoyé</th>
+                                <th class="d-none d-sm-table-cell">Dernière modification</th>
+                                <th class="text-end">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for report in reports %}
+                            <tr>
+                                <td>
+                                    {{ report.month.strftime('%B %Y') }}
+                                </td>
+                                <td>
+                                    <div class="text-truncate" style="max-width: 200px;">
+                                        {{ report.actions_seo[:100] if report.actions_seo else '' }}...
+                                    </div>
+                                </td>
+                                <td class="d-none d-md-table-cell">
+                                    <div class="text-truncate" style="max-width: 200px;">
+                                        {{ report.secretary_report[:100] if report.secretary_report else 'Non envoyé' }}
+                                    </div>
+                                </td>
+                                <td class="d-none d-sm-table-cell">
+                                    {{ report.updated_at.strftime('%d/%m/%Y %H:%M') }}
+                                </td>
+                                <td class="text-end">
+                                    <div class="d-flex flex-column flex-sm-row gap-2 justify-content-end">
+                                        <button class="btn btn-primary btn-sm" onclick="editReport({{ report.id }}, '{{ report.month.strftime('%Y-%m') }}', `{{ report.actions_seo|replace('\n', '\\n')|replace('`', '\\`') }}`, `{{ report.secretary_report|default('')|replace('\n', '\\n')|replace('`', '\\`') }}`)">
+                                            <i class="fas fa-edit"></i>
+                                            <span class="d-none d-sm-inline ms-1">Modifier</span>
+                                        </button>
+                                        <button class="btn btn-primary btn-sm" onclick="deleteReport({{ report.id }}, '{{ report.month.strftime('%B %Y') }}')">
+                                            <i class="fas fa-trash"></i>
+                                            <span class="d-none d-sm-inline ms-1">Supprimer</span>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
@@ -102,7 +126,9 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
-                    <button type="button" class="btn btn-primary" id="saveReport">Enregistrer</button>
+                    <button type="button" class="btn btn-primary" id="saveReport">
+                        <i class="fas fa-save me-1"></i>Enregistrer
+                    </button>
                 </div>
             </div>
         </div>
@@ -110,6 +136,20 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
+        // Gestionnaire pour l'ouverture du modal
+        document.getElementById('editReportModal').addEventListener('show.bs.modal', function (event) {
+            const button = event.relatedTarget;
+            const reportId = button.getAttribute('data-report-id');
+            
+            if (!reportId) {
+                // C'est un nouveau rapport, réinitialiser le formulaire
+                document.querySelector('[name="reportId"]').value = '';
+                document.querySelector('#month').value = new Date().toISOString().slice(0, 7);
+                document.querySelector('#actions_seo').value = '';
+                document.querySelector('#secretary_report').value = '';
+            }
+        });
+
         function deleteReport(reportId, reportMonth) {
             if (confirm(`Êtes-vous sûr de vouloir supprimer le rapport de "${reportMonth}" ?`)) {
                 fetch(`/delete_report/${reportId}`, {
@@ -136,6 +176,10 @@
             document.querySelector('#month').value = month;
             document.querySelector('#actions_seo').value = actionsSeo;
             document.querySelector('#secretary_report').value = secretaryReport;
+            
+            // Ouvrir le modal
+            const modal = new bootstrap.Modal(document.getElementById('editReportModal'));
+            modal.show();
         }
 
         // Gestionnaire pour la sauvegarde
@@ -155,11 +199,20 @@
                 },
                 body: JSON.stringify(formData)
             })
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
             .then(data => {
                 if (data.success) {
                     location.reload();
                 }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Une erreur est survenue lors de la sauvegarde du rapport.');
             });
         });
     </script>

@@ -11,7 +11,7 @@
 </head>
 <body>
     <nav class="navbar navbar-dark">
-        <div class="container-fluid">
+        <div class="container">
             <a class="navbar-brand" href="#">
                 <i class="fas fa-chart-line me-2"></i>
                 SEO Tracker
@@ -19,7 +19,7 @@
             <div class="d-flex">
                 <a href="{{ url_for('logout') }}" class="btn btn-outline-light btn-sm">
                     <i class="fas fa-sign-out-alt me-1"></i>
-                    Déconnexion
+                    <span class="d-none d-sm-inline">Déconnexion</span>
                 </a>
             </div>
         </div>
@@ -30,9 +30,10 @@
             <i class="fas fa-users"></i> Liste des clients
         </h1>
         
-        <div class="row">
-            <div class="col-md-4">
-                <div class="card add-client-card">
+        <div class="row g-4">
+            <!-- Formulaire d'ajout de client -->
+            <div class="col-12 col-md-4 order-md-1">
+                <div class="card add-client-card h-100">
                     <div class="card-header">
                         <h5 class="card-title mb-0">
                             <i class="fas fa-user-plus"></i> Ajouter un client
@@ -56,15 +57,16 @@
                 </div>
             </div>
 
-            <div class="col-md-8">
-                <div class="card">
-                    <div class="card-body">
+            <!-- Liste des clients -->
+            <div class="col-12 col-md-8 order-md-2">
+                <div class="card h-100">
+                    <div class="card-body p-0">
                         <div class="table-responsive">
-                            <table class="table">
+                            <table class="table mb-0">
                                 <thead>
                                     <tr>
                                         <th>CLIENT</th>
-                                        <th>EMAIL</th>
+                                        <th class="d-none d-sm-table-cell">EMAIL</th>
                                         <th class="text-end">ACTIONS</th>
                                     </tr>
                                 </thead>
@@ -74,18 +76,26 @@
                                         <td>
                                             <i class="fas fa-user"></i>
                                             <span class="ms-2">{{ client.name }}</span>
+                                            <div class="d-block d-sm-none text-muted small">
+                                                <i class="fas fa-envelope"></i>
+                                                {{ client.email }}
+                                            </div>
                                         </td>
-                                        <td>
+                                        <td class="d-none d-sm-table-cell">
                                             <i class="fas fa-envelope"></i>
                                             <span class="ms-2">{{ client.email }}</span>
                                         </td>
                                         <td class="text-end">
-                                            <a href="{{ url_for('client_reports', client_id=client.id) }}" class="btn btn-primary btn-sm">
-                                                <i class="fas fa-file-alt"></i> Rapports
-                                            </a>
-                                            <button onclick="deleteClient({{ client.id }}, '{{ client.name }}')" class="btn btn-primary btn-sm">
-                                                <i class="fas fa-trash"></i>
-                                            </button>
+                                            <div class="d-flex flex-column flex-sm-row gap-2 justify-content-end">
+                                                <a href="{{ url_for('client_reports', client_id=client.id) }}" class="btn btn-primary btn-sm">
+                                                    <i class="fas fa-file-alt"></i>
+                                                    <span class="d-none d-sm-inline ms-1">Rapports</span>
+                                                </a>
+                                                <button onclick="deleteClient({{ client.id }}, '{{ client.name }}')" class="btn btn-primary btn-sm">
+                                                    <i class="fas fa-trash"></i>
+                                                    <span class="d-none d-sm-inline ms-1">Supprimer</span>
+                                                </button>
+                                            </div>
                                         </td>
                                     </tr>
                                     {% endfor %}
@@ -96,28 +106,26 @@
                 </div>
             </div>
         </div>
-    </div>
 
-    <!-- Template de synthèse -->
-    <div class="row mt-4">
-        <div class="offset-md-0 col-md-12">
-            <div class="card template-card">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5 class="card-title mb-0">
-                        <i class="fas fa-file-signature"></i>
-                        Template de synthèse mensuelle
-                    </h5>
-                    <button class="btn btn-primary" id="saveTemplate">
-                        <i class="fas fa-save"></i>
-                        Enregistrer
-                    </button>
-                </div>
-                <div class="card-body">
-                    <div class="alert alert-info">
-                        <i class="fas fa-info-circle"></i>
-                        Ce template servira de base pour l'assistant SEO lors de la rédaction des rapports mensuels.
+        <!-- Template de synthèse -->
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card template-card">
+                    <div class="card-header">
+                        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                            <h5 class="card-title mb-0">
+                                <i class="fas fa-file-signature"></i>
+                                Template de synthèse mensuelle
+                            </h5>
+                            <button class="btn btn-primary" id="saveTemplate">
+                                <i class="fas fa-save"></i>
+                                <span class="d-none d-sm-inline ms-1">Enregistrer</span>
+                            </button>
+                        </div>
                     </div>
-                    <textarea class="form-control" id="templateContent" rows="12">{{ template.content if template else '' }}</textarea>
+                    <div class="card-body">
+                        <textarea class="form-control" id="templateContent" rows="4">{{ template.content if template else '' }}</textarea>
+                    </div>
                 </div>
             </div>
         </div>
