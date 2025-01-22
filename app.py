@@ -130,13 +130,14 @@ class Template(db.Model):
 
 def init_db():
     with app.app_context():
+        # Supprimer et recréer toutes les tables
+        db.drop_all()
         db.create_all()
         
-        # Ajouter les templates par défaut s'ils n'existent pas
-        if not Template.query.filter_by(type='pdf').first():
-            pdf_template = Template(
-                type='pdf',
-                content="""Bonjour,
+        # Ajouter les templates par défaut
+        pdf_template = Template(
+            type='pdf',
+            content="""Bonjour,
 
 Voici la synthèse des actions SEO réalisées ce mois-ci pour votre site :
 
@@ -145,25 +146,41 @@ Voici la synthèse des actions SEO réalisées ce mois-ci pour votre site :
 Ces actions permettront d'améliorer votre visibilité sur les moteurs de recherche.
 
 Cordialement,"""
-            )
-            db.session.add(pdf_template)
+        )
+        db.session.add(pdf_template)
 
-        if not Template.query.filter_by(type='email').first():
-            email_template = Template(
-                type='email',
-                content="""Bonjour,
+        email_template = Template(
+            type='email',
+            content="""Bonjour,
 
 Je vous prie de trouver ci-joint la synthèse des actions SEO réalisées ce mois-ci pour votre site.
 
 Cordialement,"""
-            )
-            db.session.add(email_template)
+        )
+        db.session.add(email_template)
 
+        # Ajouter les clients
+        initial_clients = [
+            Client(name="Méréo", email="guiard.pierre@gmail.com"),
+            Client(name="Happy Kite Surf", email="benoitplanchon@gmail.com"),
+            Client(name="Actimaine", email="contact@acti-maine.fr"),
+            Client(name="DP Rénov", email="desbarrephillippe@gmail.com"),
+            Client(name="Las Siette", email="safak.evin@las-siette.fr"),
+            Client(name="Rennes Pneus", email="contact@rennespneus.fr"),
+            Client(name="Vents et courbes", email="ventsetcourbes@gmail.com"),
+            Client(name="COMIZI", email="ababel@comizi.fr"),
+            Client(name="ECO Habitat", email="ecohabitat44.contact@gmail.com")
+        ]
+        
+        for client in initial_clients:
+            db.session.add(client)
+        
         try:
             db.session.commit()
         except Exception as e:
             db.session.rollback()
-            app.logger.error(f"Error adding initial templates: {str(e)}")
+            app.logger.error(f"Error initializing database: {str(e)}")
+            raise
 
 @app.route('/')
 @login_required
