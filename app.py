@@ -276,6 +276,47 @@ def delete_report(report_id):
         app.logger.error(f'Erreur lors de la suppression du rapport {report_id}: {str(e)}')
         return jsonify({'error': 'Une erreur est survenue lors de la suppression du rapport'}), 500
 
+@app.route('/init_clients', methods=['GET'])
+@login_required
+def init_clients():
+    try:
+        # Liste des clients à ajouter
+        clients_to_add = [
+            {"name": "Méréo", "email": "guiard.pierre@gmail.com"},
+            {"name": "Happy Kite Surf", "email": "benoitplanchon@gmail.com"},
+            {"name": "Actimaine", "email": "contact@acti-maine.fr"},
+            {"name": "DP Rénov", "email": "desbarrephillippe@gmail.com"},
+            {"name": "Las Siette", "email": "safak.evin@las-siette.fr"},
+            {"name": "Rennes Pneus", "email": "contact@rennespneus.fr"},
+            {"name": "Vents et courbes", "email": "ventsetcourbes@gmail.com"},
+            {"name": "COMIZI", "email": "ababel@comizi.fr"},
+            {"name": "ECO Habitat", "email": "ecohabitat44.contact@gmail.com"}
+        ]
+
+        # Ajouter chaque client s'il n'existe pas déjà
+        added_count = 0
+        for client_data in clients_to_add:
+            existing_client = Client.query.filter_by(email=client_data["email"]).first()
+            if not existing_client:
+                client = Client(name=client_data["name"], email=client_data["email"])
+                db.session.add(client)
+                added_count += 1
+                app.logger.info(f'Client ajouté: {client_data["name"]} ({client_data["email"]})')
+
+        db.session.commit()
+        return jsonify({
+            'success': True,
+            'message': f'{added_count} clients ont été ajoutés avec succès'
+        })
+
+    except Exception as e:
+        db.session.rollback()
+        app.logger.error(f'Erreur lors de l\'initialisation des clients: {str(e)}')
+        return jsonify({
+            'success': False,
+            'error': 'Une erreur est survenue lors de l\'ajout des clients'
+        }), 500
+
 if __name__ == '__main__':
     app.run(debug=True)
 else:
